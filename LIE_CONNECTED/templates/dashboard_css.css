@@ -1,0 +1,118 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0c0c0c;
+  color: #fff;
+  min-height: 100vh;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #0ef;
+}
+
+.navbar h1 {
+  color: #0ef;
+  font-size: 1.5rem;
+}
+
+.logout-btn {
+  padding: 8px 15px;
+  background: #0ef;
+  color: #0c0c0c;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #09c;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #2c4766;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: #0ef;
+}
+
+.card h2 {
+  color: #0ef;
+  margin-bottom: 10px;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  background: #0ef;
+  color: #0c0c0c;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #09c;
+  color: #fff;
+}
+
+.results-box {
+  margin-top: 10px;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(0, 238, 255, 0.1);
+  border: 1px solid #0ef;
+}
+
+.bar {
+  height: 15px;
+  width: 100%;
+  background: #222;
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #0ef;
+  width: 0%;
+  transition: width 0.5s;
+}
+
+.confidence {
+  font-size: 0.85rem;
+  color: #0ef;
+}
+

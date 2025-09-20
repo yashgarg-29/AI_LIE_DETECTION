@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Lie Detector - Dashboard</title>
+  <link rel="stylesheet" href="dashboard_css.css">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0c0c0c;
+  color: #fff;
+  min-height: 100vh;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #0ef;
+}
+
+.navbar h1 {
+  color: #0ef;
+  font-size: 1.5rem;
+}
+
+.logout-btn {
+  padding: 8px 15px;
+  background: #0ef;
+  color: #0c0c0c;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #09c;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #2c4766;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: #0ef;
+}
+
+.card h2 {
+  color: #0ef;
+  margin-bottom: 10px;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  background: #0ef;
+  color: #0c0c0c;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #09c;
+  color: #fff;
+}
+
+.results-box {
+  margin-top: 10px;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(0, 238, 255, 0.1);
+  border: 1px solid #0ef;
+}
+
+.bar {
+  height: 15px;
+  width: 100%;
+  background: #222;
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #0ef;
+  width: 0%;
+  transition: width 0.5s;
+}
+
+.confidence {
+  font-size: 0.85rem;
+  color: #0ef;
+}
+
+
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <h1>AI Lie Detector</h1>
+    <a href="https://flowing-chow-58.accounts.dev/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3000%2F" class="logout-btn">Logout</a>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Voice Analysis Section -->
+    <div class="card">
+      <h2>🎙️ Voice Analysis</h2>
+      <p>Upload or record your voice for analysis.</p>
+      <input type="file" id="audioUpload" accept="audio/*">
+      <button class="btn" id="recordBtn">Record Audio</button>
+    </div>
+
+    <!-- Facial Analysis Section -->
+    <div class="card">
+      <h2>📸 Facial Analysis</h2>
+      <p>Upload or capture your photo for analysis.</p>
+      <input type="file" id="photoUpload" accept="image/*">
+      <button class="btn" id="captureBtn">Capture Photo</button>
+    </div>
+
+    <!-- Results Section -->
+    <div class="card">
+      <h2>📊 Results</h2>
+      <div class="results-box">
+        <p id="status"><strong>Status:</strong> Awaiting input...</p>
+        <div class="bar">
+          <div class="bar-fill" id="barFill"></div>
+        </div>
+        <p class="confidence" id="confidence">Confidence: 0%</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== SCRIPTS ================== -->
+
+  <script>
+  // ==== VOICE RECORDING ====
+  let mediaRecorder;
+  let audioChunks = [];
+
+  document.getElementById("recordBtn").addEventListener("click", startRecording);
+
+  function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        alert("🎙️ Recording started. Speak now...");
+
+        audioChunks = [];
+        mediaRecorder.addEventListener("dataavailable", event => {
+          audioChunks.push(event.data);
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          const audio = document.createElement("audio");
+          audio.controls = true;
+          audio.src = audioUrl;
+          document.querySelector(".results-box").appendChild(audio);
+
+          // Send to backend
+          sendAudioToServer(audioBlob);
+        });
+
+        setTimeout(() => {
+          mediaRecorder.stop();
+          alert("✅ Recording stopped.");
+        }, 5000);
+      })
+      .catch(err => {
+        alert("Microphone access denied or not available.");
+        console.error(err);
+      });
+  }
+
+  // ==== CAPTURE PHOTO ====
+  document.getElementById("captureBtn").addEventListener("click", capturePhoto);
+
+  function capturePhoto() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        video.autoplay = true;
+        document.querySelector(".results-box").appendChild(video);
+
+        setTimeout(() => {
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          stream.getTracks().forEach(track => track.stop());
+          video.remove();
+
+          const img = document.createElement("img");
+          img.src = canvas.toDataURL("image/png");
+          img.style.maxWidth = "200px";
+          img.style.marginTop = "10px";
+          document.querySelector(".results-box").appendChild(img);
+
+          // Send to backend
+          canvas.toBlob(blob => {
+            sendPhotoToServer(blob);
+          }, "image/png");
+        }, 3000);
+      })
+      .catch(err => {
+        alert("Camera access denied or not available.");
+        console.error(err);
+      });
+  }
+  </script>
+
+  <script>
+  // ==== BACKEND INTEGRATION ====
+  const VOICE_URL = "http://127.0.0.1:5000/predict_voice";
+  const FACE_URL  = "http://127.0.0.1:5000/predict_face";
+
+  async function sendAudioToServer(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const statusEl = document.getElementById("status");
+    statusEl.innerHTML = "<strong>Status:</strong> Analyzing voice...";
+
+    try {
+      const res = await fetch(VOICE_URL, { method: "POST", body: fd });
+      const data = await res.json();
+      console.log("Voice response:", data);
+
+      statusEl.innerHTML = `<strong>Status:</strong> ${data.prediction}`;
+      if (data.confidence !== undefined) {
+        document.getElementById("barFill").style.width = `${(data.confidence*100).toFixed(1)}%`;
+        document.getElementById("confidence").textContent =
+          `Confidence: ${(data.confidence*100).toFixed(1)}%`;
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      statusEl.innerHTML = "<strong>Status:</strong> Network error ❌";
+    }
+  }
+
+  async function sendPhotoToServer(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const statusEl = document.getElementById("status");
+    statusEl.innerHTML = "<strong>Status:</strong> Analyzing face...";
+
+    try {
+      const res = await fetch(FACE_URL, { method: "POST", body: fd });
+      const data = await res.json();
+      console.log("Face response:", data);
+
+      statusEl.innerHTML = `<strong>Status:</strong> ${data.prediction}`;
+      if (data.confidence !== undefined) {
+        document.getElementById("barFill").style.width = `${(data.confidence*100).toFixed(1)}%`;
+        document.getElementById("confidence").textContent =
+          `Confidence: ${(data.confidence*100).toFixed(1)}%`;
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      statusEl.innerHTML = "<strong>Status:</strong> Network error ❌";
+    }
+  }
+
+  // Upload handlers
+  document.getElementById("audioUpload").addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) sendAudioToServer(file);
+  });
+
+  document.getElementById("photoUpload").addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) sendPhotoToServer(file);
+  });
+  </script>
+</body>
+</html>
